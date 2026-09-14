@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "MHL"
+description = "A street-light monitoring and management dashboard with map views, maintenance history, administration tools, and role-based access for field teams and operators."
+version = "1.0.0"
+id = "artifacts/mhl"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25412
+
+[services.development]
+run = "pnpm --filter @workspace/mhl run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/mhl", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/mhl/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25412"
+BASE_PATH = "/"
