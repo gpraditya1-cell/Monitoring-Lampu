@@ -43,9 +43,9 @@ export const useAuthStore = create((set, get) => ({
   signIn: async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
-    if (data?.user) {
-      await get().fetchProfile(data.user)
-    }
+    // Immediately hydrate Zustand state so ProtectedRoute sees the user
+    // without waiting for the async onAuthStateChange callback.
+    await get().fetchProfile(data.user)
     return data
   },
 
