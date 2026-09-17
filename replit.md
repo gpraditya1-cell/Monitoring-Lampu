@@ -1,15 +1,55 @@
-# [Project name]
+# Monitoring-Lampu
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Monitoring dashboard for lamps with Supabase auth and PostgreSQL backend.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+### Prerequisites
+
+- **Node.js 24** and **pnpm** installed
+- **PostgreSQL** running locally (or a remote instance)
+- **Supabase project** (for frontend authentication)
+
+### Backend
+
+```bash
+# 1. Copy env template and set DATABASE_URL
+cp .env.example .env.local
+# Edit .env.local with your PostgreSQL connection string
+
+# 2. Push schema (dev only)
+pnpm --filter @workspace/db run push
+
+# 3. Build and run
+pnpm --filter @workspace/api-server run dev
+# Server listens on PORT (default 5000)
+```
+
+### Frontend
+
+```bash
+# 1. Copy env template and set Supabase credentials
+cp artifacts/mhl/.env.example artifacts/mhl/.env.local
+# Edit artifacts/mhl/.env.local with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+
+# 2. Run dev server
+pnpm --filter @workspace/mhl run dev
+# Vite dev server listens on PORT (default 5176)
+```
+
+### Full build & typecheck
+
+```bash
+pnpm run typecheck   # full typecheck across all packages
+pnpm run build       # typecheck + build all packages
+```
+
+### Required environment variables
+
+- `DATABASE_URL` — Postgres connection string (backend)
+- `PORT` — API server port (backend)
+- `VITE_SUPABASE_URL` — Supabase project URL (frontend)
+- `VITE_SUPABASE_ANON_KEY` — Supabase anon key (frontend)
 
 ## Stack
 
@@ -17,29 +57,23 @@ _Replace the heading above with the project's name, and this line with one sente
 - API: Express 5
 - DB: PostgreSQL + Drizzle ORM
 - Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
 - Build: esbuild (CJS bundle)
+- Frontend: Vite + React + Tailwind
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/api-server/` — Express backend
+- `artifacts/mhl/` — Vite frontend (React)
+- `lib/db/` — Drizzle ORM schema and DB client
+- `artifacts/api-zod/` — Shared Zod schemas
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
-
-## Product
-
-_Describe the high-level user-facing capabilities of this app once they exist._
-
-## User preferences
-
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Frontend and backend have separate `.env.local` files; Vite reads `artifacts/mhl/.env.local`, backend reads root `.env.local`
+- `PORT` is required in both frontend and backend configs (no fallback)
+- `BASE_PATH` required in Vite config for correct routing
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
-
-## Pointers
-
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- Backend integration tests require `DATABASE_URL` to be set; if not available, tests will fail at import time
+- Do not commit `.env.local` files — they are in `.gitignore`
