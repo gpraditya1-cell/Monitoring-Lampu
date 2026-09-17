@@ -50,6 +50,25 @@ export const useLampStore = create((set, get) => ({
     return publicUrl
   },
 
+  uploadMapPdf: async (mapId, file) => {
+    // Convert first page of PDF to PNG image, then upload
+    const pdfjsLib = await import('pdfjs-dist')
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdfjs/4.10.38/pdf.worker.min.js`
+
+    const arrayBuffer = await file.arrayBuffer()
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+    const page = await pdf.getPage(1)
+    const viewport = page.getViewport({ scale: 2 })
+    const canvas = document.createElement('canvas')
+    canvas.width = viewport.width
+    canvas.height = viewport.height
+    const ctx = canvas.getContext('2d')
+    await page.render({ canvasContext: ctx, viewport }).promise
+    const blob = await new Promise((resolve) => canvas.toBlob((b) => resolve(b), 'image/png'))
+    const pngFile = new File([blob], `${mapId}-page-1.png`, { type: 'image/png' })
+    return get().uploadMapImage(mapId, pngFile)
+  },
+
   deleteMap: async (mapId) => {
     const { error } = await supabase.from('maps').update({ is_active: false }).eq('id', mapId)
     if (error) throw error

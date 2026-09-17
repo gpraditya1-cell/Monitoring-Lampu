@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Plus, Upload, Trash2, Users, Map, Database } from 'lucide-react'
+import { ArrowLeft, Plus, Upload, Trash2, Users, Map, Database, FileText } from 'lucide-react'
 import { useLampStore } from '../store/useLampStore'
 import { useAuthStore } from '../store/useAuthStore'
 import { supabase } from '../lib/supabase'
@@ -8,7 +8,7 @@ import { buildSeedLamps } from '../lib/seedLamps'
 
 export default function AdminPage() {
   const navigate = useNavigate()
-  const { maps, fetchMaps, createMap, uploadMapImage, deleteMap, seedLamps } = useLampStore()
+  const { maps, fetchMaps, createMap, uploadMapImage, uploadMapPdf, deleteMap, seedLamps } = useLampStore()
   const { isAdmin } = useAuthStore()
 
   const [tab, setTab] = useState('maps') // maps | users
@@ -20,6 +20,7 @@ export default function AdminPage() {
   const [users, setUsers] = useState([])
   const [loadingUsers, setLoadingUsers] = useState(false)
   const [seeding, setSeeding] = useState(null)
+  const [pdfUploading, setPdfUploading] = useState(null)
   const fileRefs = useRef({})
 
   if (!isAdmin()) {
@@ -65,6 +66,22 @@ export default function AdminPage() {
       alert('Gambar berhasil diupload!')
     } catch (e) {
       alert('Gagal upload: ' + e.message)
+    }
+  }
+
+  const handleUploadPdf = async (mapId, file) => {
+    if (!file || file.type !== 'application/pdf') {
+      alert('File harus berupa PDF')
+      return
+    }
+    setPdfUploading(mapId)
+    try {
+      await uploadMapPdf(mapId, file)
+      alert('PDF berhasil diimport! Halaman pertama dikonversi menjadi gambar.')
+    } catch (e) {
+      alert('Gagal import PDF: ' + e.message)
+    } finally {
+      setPdfUploading(null)
     }
   }
 
@@ -199,6 +216,20 @@ export default function AdminPage() {
                   <button onClick={() => fileRefs.current[map.id]?.click()}
                     className="w-full bg-border hover:bg-border-2 text-dim font-semibold py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm transition-colors">
                     <Upload size={14} /> {map.image_url ? 'Ganti Gambar Denah' : 'Upload Gambar Denah'}
+                  </button>
+
+                  {/* Upload PDF */}
+                  <input
+                    type="file" accept="application/pdf"
+                    ref={(el) => fileRefs.current[`pdf-${map.id}`] = el}
+                    onChange={(e) => e.target.files?.[0] && handleUploadPdf(map.id, e.target.files[0])}
+                    className="hidden"
+                  />
+                  <button
+                    onClick={() => fileRefs.current[`pdf-${map.id}`]?.click()}
+                    disabled={pdfUploading === map.id}
+                    className="w-full bg-border hover:bg-border-2 text-dim font-semibold py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm transition-colors disabled:opacity-60">
+                    <FileText size={14} /> {pdfUploading === map.id ? 'Mengimport...' : 'Import dari PDF'}
                   </button>
 
                   {/* Seed lamps (only for Gudang 1&2 map) */}
