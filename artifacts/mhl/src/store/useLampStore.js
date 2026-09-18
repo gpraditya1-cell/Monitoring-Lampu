@@ -50,10 +50,11 @@ export const useLampStore = create((set, get) => ({
     return publicUrl
   },
 
-  uploadMapPdf: async (mapId, file) => {
+   uploadMapPdf: async (mapId, file) => {
     // Convert first page of PDF to PNG image, then upload
     const pdfjsLib = await import('pdfjs-dist')
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdfjs/4.10.38/pdf.worker.min.js`
+    const workerUrl = await import('pdfjs-dist/build/pdf.worker.min.mjs?url')
+    pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl.default
 
     const arrayBuffer = await file.arrayBuffer()
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
