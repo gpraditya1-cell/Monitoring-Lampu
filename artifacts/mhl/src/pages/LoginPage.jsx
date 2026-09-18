@@ -1,10 +1,11 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/useAuthStore'
-import { isSupabaseConfigured } from '../lib/supabase'
 import { Lightbulb } from 'lucide-react'
 
 export default function LoginPage() {
   const signIn = useAuthStore((s) => s.signIn)
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -16,16 +17,9 @@ export default function LoginPage() {
     setLoading(true)
     try {
       await signIn(email, password)
+      navigate('/', { replace: true })
     } catch (err) {
-      if (!isSupabaseConfigured) {
-        setError('Konfigurasi Supabase belum valid. Periksa VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KEY di Secrets.')
-      } else if (err?.message?.toLowerCase().includes('email not confirmed')) {
-        setError('Email belum dikonfirmasi. Buka email verifikasi dari Supabase terlebih dahulu.')
-      } else if (err?.message?.toLowerCase().includes('invalid login credentials')) {
-        setError('Email atau password salah.')
-      } else {
-        setError('Login gagal. Periksa koneksi dan konfigurasi Supabase.')
-      }
+      setError('Email atau password salah.')
     } finally {
       setLoading(false)
     }
@@ -56,7 +50,6 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="nama@email.com"
-                autoComplete="email"
                 required
                 className="w-full bg-s2 border border-border rounded-xl px-4 py-3 text-sm text-white placeholder:text-muted focus:outline-none focus:border-accent transition-colors"
               />
@@ -68,7 +61,6 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                autoComplete="current-password"
                 required
                 className="w-full bg-s2 border border-border rounded-xl px-4 py-3 text-sm text-white placeholder:text-muted focus:outline-none focus:border-accent transition-colors"
               />
