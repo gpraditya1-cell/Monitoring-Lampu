@@ -7,6 +7,11 @@ export const useAuthStore = create((set, get) => ({
   loading: true,
 
   init: async () => {
+    if (!supabase) {
+      set({ loading: false })
+      return
+    }
+
     const { data: { session } } = await supabase.auth.getSession()
     if (session?.user) {
       try {
@@ -41,6 +46,10 @@ export const useAuthStore = create((set, get) => ({
   },
 
   signIn: async (email, password) => {
+    if (!supabase) {
+      throw new Error('Supabase is not configured with a valid URL.')
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
     // Immediately hydrate Zustand state so ProtectedRoute sees the user
@@ -50,7 +59,7 @@ export const useAuthStore = create((set, get) => ({
   },
 
   signOut: async () => {
-    await supabase.auth.signOut()
+    if (supabase) await supabase.auth.signOut()
     set({ user: null, profile: null })
   },
 
