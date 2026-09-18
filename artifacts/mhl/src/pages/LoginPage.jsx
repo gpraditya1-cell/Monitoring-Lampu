@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuthStore } from '../store/useAuthStore'
+import { isSupabaseConfigured } from '../lib/supabase'
 import { Lightbulb } from 'lucide-react'
 
 export default function LoginPage() {
@@ -16,7 +17,15 @@ export default function LoginPage() {
     try {
       await signIn(email, password)
     } catch (err) {
-      setError('Email atau password salah.')
+      if (!isSupabaseConfigured) {
+        setError('Konfigurasi Supabase belum valid. Periksa VITE_SUPABASE_URL dan VITE_SUPABASE_ANON_KEY di Secrets.')
+      } else if (err?.message?.toLowerCase().includes('email not confirmed')) {
+        setError('Email belum dikonfirmasi. Buka email verifikasi dari Supabase terlebih dahulu.')
+      } else if (err?.message?.toLowerCase().includes('invalid login credentials')) {
+        setError('Email atau password salah.')
+      } else {
+        setError('Login gagal. Periksa koneksi dan konfigurasi Supabase.')
+      }
     } finally {
       setLoading(false)
     }
@@ -47,6 +56,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="nama@email.com"
+                autoComplete="email"
                 required
                 className="w-full bg-s2 border border-border rounded-xl px-4 py-3 text-sm text-white placeholder:text-muted focus:outline-none focus:border-accent transition-colors"
               />
@@ -58,6 +68,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
+                autoComplete="current-password"
                 required
                 className="w-full bg-s2 border border-border rounded-xl px-4 py-3 text-sm text-white placeholder:text-muted focus:outline-none focus:border-accent transition-colors"
               />

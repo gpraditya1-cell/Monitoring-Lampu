@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-const isValidSupabaseUrl = (() => {
+export const isSupabaseConfigured = (() => {
   if (!supabaseUrl || !supabaseAnonKey) return false;
 
   try {
@@ -14,6 +14,6 @@ const isValidSupabaseUrl = (() => {
   }
 })();
 
-export const supabase = isValidSupabaseUrl
+export const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
